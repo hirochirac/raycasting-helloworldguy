@@ -37,13 +37,18 @@ Player :: struct {
     angle_rotation: f32,
     move_speed: f32,
     ray_lenght: f32,
-    rays: []rl.Ray,
+    rays: [dynamic]rl.Ray,
     fov: f32,
+    number_of_ray: i32,
 }
 
 
-init_player :: proc ( x : int = 2, y : int =  2, circle_size: f32 = 5.0, angle : f32 = 90.0, angle_rotation : f32 = 5.0, move_speed : f32 = 10.0, ray_lenght : f32 = 100.0, fov: f32 = 60.0 ) -> (player: Player) {
-
+init_player :: proc ( x : int = 2, y : int =  2,
+                     circle_size: f32 = 5.0,
+                     angle : f32 = 90.0,
+                     angle_rotation : f32 = 5.0,
+                     move_speed : f32 = 10.0,
+                     ray_lenght : f32 = 200.0, fov: f32 = 60.0, number_of_ray: i32 = 100 ) -> (player: Player) {
     player.x = x
     player.x = y
     player.circle_size = circle_size
@@ -54,6 +59,8 @@ init_player :: proc ( x : int = 2, y : int =  2, circle_size: f32 = 5.0, angle :
     player.move_speed = move_speed
     player.ray_lenght = ray_lenght
     player.fov = 60
+    player.number_of_ray = number_of_ray
+    player.rays = make_dynamic_array_len([dynamic]rl.Ray,number_of_ray+1)
     return 
 }
 
@@ -75,20 +82,53 @@ get_carte :: proc (carte_file_path: string, $COL, $LIG: int,  allocator := conte
 }
 
 
-fix_angle :: proc () -> ( angle: f32 ) {
+fix_angle :: proc ( a : f32 ) -> ( angle: f32 ) {
+    angle = a
+    if ( angle < 0 ) {
+        angle += 360
+    } else if angle >= 360 {
+        angle -= 360
+    }
     return
 }
 
-look_right :: proc () -> ( res: bool ) {
+look_right :: proc ( a: f32 ) -> ( res: bool ) {
+    res = a >= 90 && a <= 270 ? true : false 
     return
 }
 
-look_up :: proc () -> ( res: bool ) {
+look_up :: proc ( a: f32 ) -> ( res: bool ) {
+    res = a >= 0 && a <= 180.0 ? true : false  
     return
 }
 
 
+cast_rays :: proc ( player: ^Player ) {
 
+    r : rl.Ray
+    incr_angle: f32 
+    demi_fov : f32 = player^.fov / 2.0
+    lowest_angle : f32 = player^.angle - demi_fov
+    hightest_angle : f32 = player^.angle + demi_fov
+    step_angle : f32 = math.floor(player.fov / f32(len(player^.rays)))
+
+    remove_range(&player^.rays,0,len(player^.rays))
+
+    for a in lowest_angle ..< hightest_angle {
+        cos := math.cos(math.to_radians(a))
+        sin := math.sin(math.to_radians(a))
+        r.position = {player^.position.x + cos * player^.ray_lenght,player^.position.y + sin * player^.ray_lenght,0}
+        r.direction = {cos,sin,0}
+        append_elem(&player^.rays,r)
+        incr_angle += step_angle 
+    }
+
+}
+
+
+ray_collision :: proc ( player: ^Player ) {
+
+}
 
 
 
@@ -98,9 +138,13 @@ update_player :: proc ($COL, $LIG: int, player: ^Player, carte: [COL][LIG]rune )
     key : rl.KeyboardKey = rl.GetKeyPressed()
 
     #partial switch key {
-        case rl.KeyboardKey.UP: player.angle -= player.angle_rotation
-        case rl.KeyboardKey.DOWN: player.angle += player.angle_rotation
-        case rl.KeyboardKey.LEFT:
+        case rl.KeyboardKey.UP:
+            player.angle -= player.angle_rotation
+            player^.angle = fix_angle(player^.angle)
+        case rl.KeyboardKey.DOWN:
+            player.angle += player.angle_rotation
+            player^.angle = fix_angle(player^.angle)
+        case rl.KeyboardKey.LEFT: 
             player^.position.x += math.cos(math.to_radians(player^.angle)) * player^.move_speed
             player^.position.y += math.sin(math.to_radians(player^.angle)) * player^.move_speed
         case rl.KeyboardKey.RIGHT:
@@ -110,6 +154,8 @@ update_player :: proc ($COL, $LIG: int, player: ^Player, carte: [COL][LIG]rune )
 
     player^.x = int(player^.position.x) / TILE_SIZE
     player^.y = int(player^.position.y) / TILE_SIZE
+
+    cast_rays(player)
 
     if carte[player^.x][player^.y] == '1' {
         player^ = p 
@@ -129,12 +175,27 @@ draw_carte :: proc ( $COL: int, $LIG: int, carte: [COL][LIG]rune ) {
 }
 
 
-draw_player :: proc ( player: Player) {
+draw_info :: proc ( player : Player ) {
     angle := math.to_radians(player.angle)
-    x_end := player.position.x + math.cos(angle) * player.ray_lenght
-    y_end := player.position.y + math.sin(angle) * player.ray_lenght
+    builder : strings.Builder
+    builder_radiant : strings.Builder
+    strings.builder_init(&builder)
+    strings.builder_init(&builder_radiant)
+    strings.write_f32(&builder,player.angle,'f')
+    strings.write_f32(&builder_radiant,angle,'f')
+    rl.DrawText(strings.to_cstring(&builder),500,550,20,rl.WHITE)
+    rl.DrawText(strings.to_cstring(&builder_radiant),500,650,20,rl.WHITE)
+    strings.builder_destroy(&builder)
+    strings.builder_destroy(&builder_radiant)
+}
+
+
+draw_player :: proc ( player: Player) {
+    angle := math.to_radians(player.angle) 
     rl.DrawCircleV(player.position,player.circle_size,items[.Player])
-    rl.DrawLineEx({player.position.x,player.position.y},{x_end,y_end},1,items[.Rayon])
+    for u in player.rays {
+        rl.DrawLineEx({player.position.x,player.position.y},{u.position.x,u.position.y},1,items[.Rayon])
+    }
 }
 
 
@@ -158,8 +219,10 @@ main :: proc () {
         rl.ClearBackground(rl.BLACK)
         draw_carte(10,10,carte)
         draw_player(player)
+        draw_info(player)
         rl.EndDrawing()
     }
     
     rl.CloseWindow()
+    delete_dynamic_array(player.rays)
 }
