@@ -38,10 +38,11 @@ Player :: struct {
     move_speed: f32,
     ray_lenght: f32,
     rays: []rl.Ray,
+    fov: f32,
 }
 
 
-init_player :: proc ( x : int = 2, y : int =  2, circle_size: f32 = 5.0, angle : f32 = 90.0, angle_rotation : f32 = 5.0, move_speed : f32 = 10.0, ray_lenght : f32 = 100.0 ) -> (player: Player) {
+init_player :: proc ( x : int = 2, y : int =  2, circle_size: f32 = 5.0, angle : f32 = 90.0, angle_rotation : f32 = 5.0, move_speed : f32 = 10.0, ray_lenght : f32 = 100.0, fov: f32 = 60.0 ) -> (player: Player) {
 
     player.x = x
     player.x = y
@@ -52,7 +53,7 @@ init_player :: proc ( x : int = 2, y : int =  2, circle_size: f32 = 5.0, angle :
     player.angle_rotation = angle_rotation
     player.move_speed = move_speed
     player.ray_lenght = ray_lenght
-    
+    player.fov = 60
     return 
 }
 
@@ -85,6 +86,10 @@ look_right :: proc () -> ( res: bool ) {
 look_up :: proc () -> ( res: bool ) {
     return
 }
+
+
+
+
 
 
 update_player :: proc ($COL, $LIG: int, player: ^Player, carte: [COL][LIG]rune ) {
