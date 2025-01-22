@@ -135,7 +135,7 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
         offset.y = -TILE_SIZE
     }
 
-    for i in 0..= player.ray_lenght {
+    for i in 0..< player.ray_lenght {
         mapX := int(rayPos.x / TILE_SIZE)
         mapY := int(rayPos.y / TILE_SIZE)
 
