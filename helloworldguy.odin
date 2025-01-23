@@ -160,7 +160,7 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
 
         if mapY < len(carte) && mapX < len(carte) && carte[mapX][mapY] == '1' {
             hdist = math.sqrt(math.pow(player.position.x - h_rayPos.x,2) + math.pow(player.position.y - h_rayPos.y,2))
-            //fmt.println(vdof)
+            fmt.printfln("%f %f",mapX,mapY)
             break
         }
         vdof += 1
