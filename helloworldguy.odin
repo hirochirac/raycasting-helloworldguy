@@ -151,9 +151,9 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
         vdof = player.ray_lenght
     }
 
-    for i in hdof..= player.ray_lenght {
-        mapX := int(h_rayPos.x / TILE_SIZE)
-        mapY := int(h_rayPos.y / TILE_SIZE)
+    for i in 0..= player.ray_lenght {
+        mapX := int(rayPos.x / TILE_SIZE)
+        mapY := int(rayPos.y / TILE_SIZE)
 
         if mapY < len(carte) && mapX < len(carte[0]) && carte[mapY][mapX] == '1' {
             hdist = math.sqrt(math.pow(player.position.x - h_rayPos.x,2) + math.pow(player.position.y - h_rayPos.y,2))
