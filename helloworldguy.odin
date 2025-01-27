@@ -154,7 +154,7 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
         hdof = player.ray_lenght
     }
 
-    for ; hdof < player.ray_lenght; {
+    for ; hdof <= player.ray_lenght; {
         mapX := int(h_rayPos.x) / TILE_SIZE
         mapY := int(h_rayPos.y) / TILE_SIZE
 
@@ -185,7 +185,7 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
         vdof = player.ray_lenght
     } 
 
-    for ; vdof < player.ray_lenght; {
+    for ; vdof <= player.ray_lenght; {
         mapX := int(v_rayPos.x) / TILE_SIZE
         mapY := int(v_rayPos.y) / TILE_SIZE
 
