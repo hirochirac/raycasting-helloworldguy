@@ -158,7 +158,7 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
         mapX := int(h_rayPos.x) / TILE_SIZE
         mapY := int(h_rayPos.y) / TILE_SIZE
 
-        if mapY >= 0 && mapY < len(carte) && mapX >= 0 && mapX < len(carte) && carte[mapY][mapX] == '1' {
+        if mapY > 0 && mapY < len(carte) && mapX > 0 && mapX < len(carte) && carte[mapY][mapX] == '1' {
             hdist = math.sqrt(math.pow(player.position.x - h_rayPos.x,2) + math.pow(player.position.y - h_rayPos.y,2))
             break
         }
@@ -191,7 +191,7 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
 
         //fmt.printfln("mapX : %d, mapY : %d %f",mapX,mapY)
 
-        if mapY >= 0 && mapY < len(carte) && mapX >= 0 && mapX < len(carte[0]) && carte[mapY][mapX] == '1' {
+        if mapY > 0 && mapY < len(carte) && mapX > 0 && mapX < len(carte[0]) && carte[mapY][mapX] == '1' {
             vdist = math.sqrt(math.pow(v_rayPos.x - player.position.x,2) + math.pow(v_rayPos.y - player.position.y,2))
             break
         }
