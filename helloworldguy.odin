@@ -58,7 +58,7 @@ init_player :: proc ( x : int = 3, y : int =  2,
                      angle : f32 = 90.0,
                      angle_rotation : f32 = 120.0,
                      move_speed : f32 = 100.0,
-                     ray_lenght : f32 = 200.0, fov: f32 = 60.0, number_of_ray: i32 = 100 ) -> (player: Player) {
+                     ray_lenght : f32 = 60.0, fov: f32 = 60.0, number_of_ray: i32 = 100 ) -> (player: Player) {
     player.x = x
     player.y = y
     player.circle_size = circle_size
@@ -130,7 +130,7 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
     v_rayPos, h_rayPos, offset : rl.Vector2
     angle : f32 = math.to_radians_f32(player.angle)
     htan : f32 = - 1 / math.tan(angle)
-    //vtan : f32 = -math.tan(angle) 
+    vtan : f32 = -math.tan(angle) 
     sin : f32 = math.sin(angle)
     cos : f32 = math.cos(angle)
     hdist, vdist : f32
@@ -138,68 +138,78 @@ cast_a_ray :: proc ( player: Player, carte: [10][10]rune ) -> ( ray: rl.Ray ) {
  
     if sin > 0.001 {
         // looking down
-        h_rayPos.y = math.floor(player.position.y / TILE_SIZE) * TILE_SIZE + TILE_SIZE
+        h_rayPos.y = math.floor(player.position.y / f32(TILE_SIZE)) * f32(TILE_SIZE) + f32(TILE_SIZE)
         h_rayPos.x = math.floor(player.position.y - h_rayPos.y) * htan + player.position.x
         offset.y = TILE_SIZE
         offset.x = -offset.y * htan
-        vdof = 0
+        hdof = 0
     } else if sin < -0.001 {
         // looking up
-        h_rayPos.y = math.floor(player.position.y / TILE_SIZE) * TILE_SIZE - 0.01
+        h_rayPos.y = math.floor(player.position.y / f32(TILE_SIZE)) * f32(TILE_SIZE) - 0.01
         h_rayPos.x = math.floor(player.position.y - h_rayPos.y) * htan + player.position.x
         offset.y = -TILE_SIZE
         offset.x = -offset.y * htan
-        vdof = 0
+        hdof = 0
     } else {
-        vdof = player.ray_lenght
+        hdof = player.ray_lenght
     }
 
-    for ; vdof < player.ray_lenght; {
-        mapX := int(h_rayPos.x / TILE_SIZE)
-        mapY := int(h_rayPos.y / TILE_SIZE)
+    for ; hdof < player.ray_lenght; {
+        mapX := int(h_rayPos.x) / TILE_SIZE
+        mapY := int(h_rayPos.y) / TILE_SIZE
 
-        if mapY < len(carte) && mapX < len(carte) && carte[mapX][mapY] == '1' {
+        if mapY >= 0 && mapY < len(carte) && mapX >= 0 && mapX < len(carte) && carte[mapY][mapX] == '1' {
             hdist = math.sqrt(math.pow(player.position.x - h_rayPos.x,2) + math.pow(player.position.y - h_rayPos.y,2))
-            fmt.printfln("%f %f",mapX,mapY)
             break
         }
-        vdof += 1
-
+        hdof += 1
+        fmt.printfln("%d",hdof)
         h_rayPos += offset
     }
 
-    // if cos > 0.001 {
-    //     // looking right
-    //     v_rayPos.x = math.floor(player.position.x / TILE_SIZE) * TILE_SIZE
-    //     v_rayPos.y = math.floor(player.position.x - v_rayPos.x) * vtan + player.position.y
-    //     offset.x = TILE_SIZE
-    //     offset.y = -TILE_SIZE * vtan
-    // } else if cos < -0.001 {
-    //     // looking left
-    //     v_rayPos.x = math.floor(player.position.x / TILE_SIZE) * TILE_SIZE + TILE_SIZE - 0.01
-    //     v_rayPos.y = math.floor(player.position.x - v_rayPos.x) * vtan + player.position.y
-    //     offset.x = -TILE_SIZE
-    //     offset.y = -TILE_SIZE * vtan
-    // } else {
-    //     vdof = player.ray_lenght
-    // } 
+    if cos > 0.001 {
+        // looking right
+        v_rayPos.x = math.floor(player.position.x / f32(TILE_SIZE)) * f32(TILE_SIZE) + f32(TILE_SIZE)
+        v_rayPos.y = math.floor(player.position.x - v_rayPos.x) * vtan + player.position.y
+        offset.x = TILE_SIZE
+        offset.y = -offset.x * vtan
+        vdof = 0
+    } else if cos < -0.001 {
+        // looking left
+        v_rayPos.x = math.floor(player.position.x / f32(TILE_SIZE)) * f32(TILE_SIZE) - 0.01
+        v_rayPos.y = math.floor(player.position.x - v_rayPos.x) * vtan + player.position.y
+        offset.x = -TILE_SIZE
+        offset.y = -offset.x * vtan
+        vdof = 0
+    } else {
+        vdof = player.ray_lenght
+    } 
 
-    // for j in vdof..< player.ray_lenght {
-    //     mapX := int(v_rayPos.x / TILE_SIZE)
-    //     mapY := int(v_rayPos.y / TILE_SIZE)
+    for ; vdof < player.ray_lenght; {
+        mapX := int(v_rayPos.x) / TILE_SIZE
+        mapY := int(v_rayPos.y) / TILE_SIZE
 
-    //     fmt.printfln("mapX : %d, mapY : %d",mapX,mapY)
+        //fmt.printfln("mapX : %d, mapY : %d %f",mapX,mapY)
 
-    //     if mapY > 0 && mapY < len(carte) && mapX > 0 && mapX < len(carte[0]) && carte[mapY][mapX] == '1' {
-    //         vdist = math.sqrt(math.pow(player.position.x - v_rayPos.x,2) + math.pow(player.position.y - v_rayPos.y,2))
-    //         break
-    //     }
-
-    //     v_rayPos += offset
+        if mapY >= 0 && mapY < len(carte) && mapX >= 0 && mapX < len(carte[0]) && carte[mapY][mapX] == '1' {
+            vdist = math.sqrt(math.pow(v_rayPos.x - player.position.x,2) + math.pow(v_rayPos.y - player.position.y,2))
+            break
+        }
+        vdof += 1 
+        v_rayPos += offset
         
-    // }
+    }
 
-    end_pos := h_rayPos
+    end_pos : rl.Vector2 = {}
+    if hdist > vdist {
+        end_pos = h_rayPos
+        fmt.printf("H_pos\t")
+    } else {
+        end_pos = v_rayPos
+        fmt.printf("V_pos\t")
+    }
+    fmt.printfln("%v",end_pos)
+
     rl.DrawLineEx({player.position.x,player.position.y},end_pos,1,items[.Rayon])
 
     return
@@ -230,7 +240,7 @@ update_player :: proc (player: ^Player, carte: [10][10]rune ) {
     player^.x = int(player^.position.x) / TILE_SIZE
     player^.y = int(player^.position.y) / TILE_SIZE
 
-    fmt.printfln("x : %d, y : %d,  %c",player^.x,player^.y,carte[player^.y][player^.x])
+    //fmt.printfln("x : %d, y : %d,  %c",player^.x,player^.y,carte[player^.y][player^.x])
 
     if carte[player^.x][player^.y] == '1' {
         player^ = p 
